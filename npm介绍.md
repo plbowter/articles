@@ -25,17 +25,18 @@ package版本：常见版本声明形式
 
 node包的安装分两种：本地安装、全局安装。两者的区别如下，后面会通过简单例子说明
 
-本地安装：package会被下载到当前所在目录，也只能在当前目录下使用。
-全局安装：package会被下载到到特定的系统目录下，安装的package能够在所有目录下使用。
+> 本地安装：package会被下载到当前所在目录，也只能在当前目录下使用。
+
+  全局安装：package会被下载到到特定的系统目录下，安装的package能够在所有目录下使用。
 
 ###### 本地安装
-
-1
-$ npm install pkg //本地安装命令
+```
+1  $ npm install pkg //本地安装命令
+```
 运行如下命令，就会在当前目录下安装 grunt-cli （grunt命令行工具）
-
-1
-$ npm install grunt-cli
+```
+1  $ npm install grunt-cli
+```
 安装结束后，当前目录下回多出一个 node_modules 目录，grunt-cli就安装在里面。同时注意控制台输出的信息：
 
 grunt-cli@0.1.9 node_modules/grunt-cli
