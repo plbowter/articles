@@ -1,7 +1,9 @@
 # npm scripts 使用指南
 
 作者：果果
+
 日期：2019年9月1日 学习笔记
+
 [阮一峰老师博客原文链接](http://www.ruanyifeng.com/blog/2016/10/npm_scripts.html)
 
 Node 开发离不开 npm，而脚本功能是 npm 最强大、最常用的功能之一。
