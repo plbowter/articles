@@ -63,7 +63,7 @@ npm 脚本的原理非常简单。每当执行 `npm run`，就会自动新建一
 
 npm 脚本的退出码，也遵守 Shell 脚本规则。如果退出码不是 `0`，npm 就认为这个脚本执行失败。
 
-## 通配符
+## 三、通配符
 由于 npm 脚本就是 Shell 脚本，因为可以使用 Shell 通配符
 
 ```
@@ -79,7 +79,7 @@ npm 脚本的退出码，也遵守 Shell 脚本规则。如果退出码不是 `0
 "test": "tap test/\*.js"
 ```
 
-## 传参
+## 四、传参
 向 npm 脚本传入参数，要使用 `--`标明。
 
 ```
@@ -99,7 +99,7 @@ $ npm run lint -- --reporter checkstyle > checkstle.xml
 "lint:checkstyle": "npm run lint -- --reporter checkstyle > checkstyle.xml"
 ```
 
-## 执行顺序
+## 五、执行顺序
 
 如果 npm 脚本里面需要执行多个任务，那么需要明确它们的执行顺序。
 
@@ -117,7 +117,7 @@ $ npm run script1 && npm run script2.js
 
 这两个符号是 Bash 的功能。此外，还可以使用 node 的任务管理器模块：[script-runner](https://github.com/paulpflug/script-runner)、[npm-run-all](https://github.com/mysticatea/npm-run-all)、[redrun](https://github.com/coderaiser/redrun)。
 
-## 默认值
+## 六、默认值
 
 一般来说，npm 脚本由用户提供。但是， npm 对两个脚本提供了默认值。也就是说，这两个脚本不用定义，就可以直接使用。
 ```
@@ -128,6 +128,224 @@ $ npm run script1 && npm run script2.js
 上面代码中，`npm run start` 的默认值是 `node server.js`，前提是项目根目录下有 `server.js` 这个脚本；
 
 `npm run install` 的默认值是 `node-gyp rebuild`，前提是项目根目录下有 `binding.gyp`文件。
+
+## 七、钩子
+
+npm 脚本有 `pre` 和 `post` 两个钩子。举例来说，`build` 脚本命令的钩子就是 `prebuild` 和 `postbuild`。
+
+```
+"prebuild": "echo I run before the build script",
+"build": "cross-env NODE_ENV=production webpack",
+"postbuild": "echo I run after the build script"
+```
+
+用户执行 `npm run build` 的时候，会自动按照下面的顺序执行。
+
+```
+npm run prebuild && npm run build && npm run postbuild
+```
+
+因此，可以在这两个钩子里面，完成一些准备工作和清理工作。下面是一个例子。
+
+```
+"clean": "rimraf ./dist && mkdir dist",
+"prebuild": "npm run clean",
+"build": "cross-env NODE_ENV=production webpack"
+```
+
+npm 默认提供下面这些钩子。
+
+- prepublish,postpublish
+- preinstall,postinstall
+- preuninstall,postuninstall
+- preversion,postversion
+- pretest,posttest
+- prestop,poststop
+- prestart,poststart
+- prerestart,postrestart
+
+自定义的脚本命令也可以加上 `pre` 和 `post` 钩子。比如，`myscript` 这个脚本命令，也有 `premyscript` 和 `postmyscript` 钩子。不过，双重的 `pre` 和 `post` 无效，比如 `prepretest` 和 `postposttest` 是无效的。
+
+npm 提供一个 `npm_lifecycle_event` 变量，返回当前正在运行的脚本名称，比如 `pretest`、`test`、`posttest` 等等。所以，可以利用这个变量，在同一个脚本文件里面，为不同的 `npm scripts` 命令编写代码。请看下面的例子。
+
+```
+const TARGET = process.env.npm_lifecycle_event;
+
+if(TARGET === 'test'){
+  console.log(`Running the test task!`);
+}
+
+if(TARGET === 'pretest'){
+  console.log(`Running the pretest task!`);
+}
+
+if(TARGET === 'posttest'){
+  console.log(`Running the posttest task!`);
+}
+```
+
+注意，`prepublish` 这个钩子不仅会在 `npm publish` 命令之前运行，还会在 `npm install`（不带任何参数）命令之前运行。
+
+这种行为很容易让用户感到困惑，所以 npm 4 引入一个新的钩子 `prepare`，行为等同于 `prepublish`，而从 npm 5 开始，
+
+`prepublish` 将只在 `npm publish` 命令之前运行。
+
+## 八、简写形式
+
+四个常用的 npm 脚本有简写形式。
+
+- npm start 是 npm run start 的简写
+- npm stop 是 npm run stop 的简写
+- npm test 是 npm run test 的简写
+- npm restart 是 npm run stop && npm run restart && npm run start 的简写
+
+`npm start`、`npm stop` 和 `npm restart` 都比较好理解，而 `npm restart` 是一个复合命令，实际上会执行三个脚本：`stop`、`restart`、`start`。具体执行顺序如下。
+
+```
+
+1. prerestart
+2. prestop
+3. stop
+4. poststop
+5. restart
+6. prestart
+7. start
+8. poststart
+9. postrestart
+
+```
+
+## 九、变量
+
+npm 脚本有一个非常强大的功能，就是可以使用 npm 的内部变量。
+首先，通过 `npm_package_` 前缀，npm 脚本可以拿到 `package.json` 里面的字段。比如，下面是一个 `package.json`。
+
+```
+{
+  "name": "foo",
+  "version": "1.2.5"
+  "scripts": {
+     "view": "node view.js"
+   }
+}
+```
+
+那么，变量 `npm_package_name` 返回 `foo`，变量 `name_package_version` 返回 `1.2.5`。
+
+```
+// view.js
+
+console.log(process.env.npm_package_name);   // foo
+console.log(process.env.npm_package_version); // 1.2.5
+```
+
+上面代码中，我们通过环境变量 `process.env` 对象，拿到 `package.json` 的字段值。如果是 Bash 脚本，可以用 `$npm_package_name` 和 `$npm_package_version` 取到这两个值。
+
+
+`npm_package_` 前缀也支持嵌套的 `package.json`字段。
+
+```
+"repository": {
+   "type": "git",
+   "url": "xxx"
+ },
+ scripts: {
+  "view": "echo $npm_package_repository_type"
+ }
+```
+上面代码中，`repository` 字段的 `type` 属性，可以通过 `npm_package_repository_type` 取到。
+
+下面是另外一个例子。
+
+```
+"scripts": {
+  "install": "foo.js"
+}
+```
+上面代码中，`npm_package_scripts_install` 变量的值等于 `foo.js`。
+
+然后，npm 脚本还可以通过 `npm_config_` 前缀，拿到 npm 的配置变量，即 `npm config get xxx` 命令返回的值。比如，当前模块的发行标签，可以通过 `npm_config_tag` 取到。
+
+```
+"view": "echo $npm_config_tag",
+```
+
+注意，`package.json` 里面的 `config` 对象，可以被环境变量覆盖。
+
+```
+{
+  "name": "foo",
+  "config": { "port": "8080" },
+  "scripts": { "start": "node server.js" }
+}
+```
+
+上面代码中，`npm_package_config_port` 变量返回的是 `8080`。这个值可以用下面的方法覆盖。
+
+```
+
+$ npm config set foo:port 80
+
+```
+最后，`env` 命令可以列出所有环境变量。
+
+```
+"env": "env"
+```
+
+## 十、常用脚本示例
+
+```
+
+// 删除目录
+"clean": "rimraf dist/*",
+
+// 本地搭建一个 HTTP 服务
+"server": "http-server -p 9090 dist/",
+
+// 打开浏览器
+"open:dev": "opener http://localhost:9090",
+
+// 实时刷新
+"livereload": "live-reload --post 9091 dist/",
+
+// 构建 HTML 文件
+"bulid:html": "jade index.jade > dist/index.html",
+
+// 只要 CSS 文件有变动，就重新执行构建
+"watch:css": "watch 'npm run build:css' assets/styles/",
+
+// 只要 HTML 文件有变动，就重新执行构建
+"watch:html": "watch 'npm run build:html' assets/html",
+
+// 部署到 Amazon S3
+"deploy:prod": "s3-cli sync ./dist/ s3://example-com/prod-site/",
+
+// 构建 favicon
+"build:favicon": "node scripts/favicon.js",
+
+```
+
+## 十一、参考链接
+- [npm scripts 使用指南](http://www.ruanyifeng.com/blog/2016/10/npm_scripts.html)
+- [How to Use npm as a Build Tool](https://www.keithcirkel.co.uk/how-to-use-npm-as-a-build-tool/), by Keith Cirkel
+- [Awesome npm scripts](https://github.com/RyanZim/awesome-npm-scripts#articles), by Ryan Zimmerman
+
+
+(完)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
