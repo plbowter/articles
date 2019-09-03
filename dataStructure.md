@@ -347,8 +347,11 @@ a.next = a.next.next
 - 其他树可以用哈希（对象）实现
 - 操作：增删改查
 - [堆排序](http://bubkoo.com/2014/01/14/sort-algorithm/heap-sort/)用到了 tree
-  概念：堆（二叉堆）可以视为一棵完全二叉树，完全二叉树的一个“优秀”的性质是，除了最底层外，每一层都是满的，这使得堆可以用数组来表示（普通的一般二叉树通常用链表作为基本容器表示），每一个结点对应数组中的一个元素
-  [堆排序演示](https://www.cs.usfca.edu/~galles/visualization/HeapSort.html)
+
+  概念：堆（二叉堆）可以视为一棵完全二叉树，完全二叉树的一个“优秀”的性质是，除了最底层外，每一层都是满的，这使得堆可以用数组来表示（普通的一般二叉树通常用链表作为基本容器表示），每一个结点对应数组中的一个元素。
+  
+[堆排序演示](https://www.cs.usfca.edu/~galles/visualization/HeapSort.html)
+
 - 其他：[B树](https://zh.wikipedia.org/wiki/B%E6%A0%91)、[红黑树](https://zh.wikipedia.org/wiki/%E7%BA%A2%E9%BB%91%E6%A0%91)、[AVL树](https://zh.wikipedia.org/wiki/AVL%E6%A0%91)
 
  
