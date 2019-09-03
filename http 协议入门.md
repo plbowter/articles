@@ -86,7 +86,7 @@ Server: Apache 0.84
 下面是一些常见的 `Content-Type` 字段的值。
 
 ```
-- text/plain
+text/plain
 text/html
 text/css
 image/jpeg
